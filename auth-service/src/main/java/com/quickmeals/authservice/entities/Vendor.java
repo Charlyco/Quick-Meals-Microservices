@@ -27,43 +27,20 @@ public class Vendor extends User{
     private Integer totalSales;
     private Double walletBalance;
     private BankDetail bankDetail;
-    @OneToMany(mappedBy = "vendor")
-    private List<Meal> meals;
-    @OneToMany(mappedBy = "selectedVendor")
-    private List<MealOrder> orderList;
-
-    public Vendor(String userName,
-                  String password,
-                  String fullName,
-                  String email,
-                  String phoneNumber,
-                  String address,
-                  Role role,
-                  Location currentLocation,
-                  String businessName,
-                  String businessDescription,
-                  Double rating,
-                  List<Meal> meals,
-                  List<MealOrder> orderList) {
-        super(userName, password, fullName, email, phoneNumber, address, role, currentLocation);
-        this.businessName = businessName;
-        this.businessDescription = businessDescription;
-        this.rating = rating;
-        this.meals = meals;
-        this.orderList = orderList;
-    }
+    private List<Integer> mealsIdList;
+    private List<Integer> orderList;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Vendor vendor)) return false;
         if (!super.equals(o)) return false;
-        return Objects.equals(businessName, vendor.businessName) && Objects.equals(businessDescription, vendor.businessDescription) && Objects.equals(rating, vendor.rating) && Objects.equals(meals, vendor.meals) && Objects.equals(orderList, vendor.orderList);
+        return Objects.equals(businessName, vendor.businessName) && Objects.equals(businessDescription, vendor.businessDescription) && Objects.equals(rating, vendor.rating) && Objects.equals(mealsIdList, vendor.mealsIdList) && Objects.equals(orderList, vendor.orderList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), businessName, businessDescription, rating, meals, orderList);
+        return Objects.hash(super.hashCode(), businessName, businessDescription, rating, mealsIdList, orderList);
     }
 
     @Override
@@ -72,7 +49,7 @@ public class Vendor extends User{
                 "businessName='" + businessName + '\'' +
                 ", businessDescription='" + businessDescription + '\'' +
                 ", rating=" + rating +
-                ", meals=" + meals +
+                ", meals=" + mealsIdList +
                 ", orderList=" + orderList +
                 "} " + super.toString();
     }

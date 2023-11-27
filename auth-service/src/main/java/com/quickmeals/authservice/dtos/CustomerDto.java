@@ -1,7 +1,5 @@
 package com.quickmeals.authservice.dtos;
 
-import com.quickmeals.api.custom_types.Role;
-import com.quickmeals.api.entities.MealOrder;
 import lombok.Getter;
 import lombok.Setter;
 

@@ -22,13 +22,4 @@ public class AuthControllerImpl implements AuthController {
         return null;
     }
 
-    @Override
-    public ResponseEntity<Void> signOut(String authToken) {
-        return null;
-    }
-
-    @Override
-    public ResponseEntity<Boolean> resetPassword(String userName, String phoneNumber, String newPassword) {
-        return null;
-    }
 }

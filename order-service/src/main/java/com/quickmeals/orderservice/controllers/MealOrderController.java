@@ -18,10 +18,10 @@ public interface MealOrderController {
     ResponseEntity<List<MealOrderDto>> getAllMealOrders();
 
     @GetMapping("/customer")
-    ResponseEntity<List<MealOrderDto>> findAllOrdersForCustomer(@RequestParam("userId") Integer userId);
+    ResponseEntity<List<MealOrderDto>> findAllOrdersForCustomer(@RequestParam("customerId") Integer userId);
 
     @GetMapping("/vendor")
-    ResponseEntity<List<MealOrderDto>> findAllOrdersForVendor(@RequestParam("userId") Integer userId);
+    ResponseEntity<List<MealOrderDto>> findAllOrdersForVendor(@RequestParam("vendorId") Integer userId);
 
     @GetMapping("/{orderId}")
     ResponseEntity<MealOrderDto> getOrderDetailsByIdAndUser(

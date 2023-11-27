@@ -5,8 +5,12 @@ import com.quickmeals.authservice.dtos.*;
 import com.quickmeals.authservice.entities.*;
 import com.quickmeals.authservice.repository.CustomerRepository;
 import com.quickmeals.authservice.repository.VendorRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,23 +19,39 @@ import java.util.List;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class EntityDtoConverter implements com.quickmeals.authservice.services.EntityDtoConverter {
     private final CustomerRepository customerRepository;
-
+    private final LoadBalancerClient loadBalancerClient;
+    private final WebClient.Builder webClientBuilder;
     private final VendorRepository vendorRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public EntityDtoConverter(CustomerRepository customerRepository, VendorRepository vendorRepository, PasswordEncoder passwordEncoder) {
-        this.customerRepository = customerRepository;
-        this.vendorRepository = vendorRepository;
-        this.passwordEncoder = passwordEncoder;
+    public Flux<Integer> getOrdersForVendor(Integer vendorId) {
+        String orderServiceUrl = loadBalancerClient.choose("order-service").getUri().toString();
+        return  webClientBuilder.build()
+                .get()
+                .uri(orderServiceUrl + "/api/v1/mealOrder/vendor?vendorId={vendorId}", vendorId)
+                .retrieve()
+                .bodyToFlux(MealOrderDto.class)
+                .map(MealOrderDto::getOrderId);
+    }
+
+    public Flux<Integer> getMealByVendor(Integer vendorId) {
+        String orderServiceUrl = loadBalancerClient.choose("product-service").getUri().toString();
+        return  webClientBuilder.build()
+                .get()
+                .uri(orderServiceUrl + "/api/v1/meal/vendorId?vendorId={vendorId}", vendorId)
+                .retrieve()
+                .bodyToFlux(MealDto.class)
+                .map(MealDto::getMealId);
     }
 
     @Override
     public UserDto convertCustomerToUserDto(Customer customer) {
         UserDto userDto = new UserDto();
         userDto.setUserId(customer.getUserId());
-        userDto.setUserName(customer.getUserName());
+        userDto.setUserName(customer.getUsername());
         userDto.setFullName(customer.getFullName());
         userDto.setEmail(customer.getEmail());
         userDto.setPhoneNumber(customer.getPhoneNumber());
@@ -47,7 +67,7 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
     public UserDto convertVendorToUserDto(Vendor vendor) {
         UserDto userDto = new UserDto();
         userDto.setUserId(vendor.getUserId());
-        userDto.setUserName(vendor.getUserName());
+        userDto.setUserName(vendor.getUsername());
         userDto.setFullName(vendor.getFullName());
         userDto.setEmail(vendor.getEmail());
         userDto.setPhoneNumber(vendor.getPhoneNumber());
@@ -63,7 +83,7 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
     public UserDto convertUserToUserDto(User user) {
         UserDto userDto = new UserDto();
         userDto.setUserId(user.getUserId());
-        userDto.setUserName(user.getUserName());
+        userDto.setUserName(user.getUsername());
         userDto.setFullName(user.getFullName());
         userDto.setEmail(user.getEmail());
         userDto.setPhoneNumber(user.getPhoneNumber());
@@ -77,13 +97,11 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
 
     @Override
     public CustomerDto convertCustomerToDto(Customer customer) {
-        List<Integer> previousOrderList = new ArrayList<>();
-        customer.getPreviousOrdersList().forEach(order ->
-                previousOrderList.add(order.getOrderId()));
 
         CustomerDto customerDto = new CustomerDto();
+
         customerDto.setUserId(customer.getUserId());
-        customerDto.setUserName(customer.getUserName());
+        customerDto.setUserName(customer.getUsername());
         customerDto.setFullName(customer.getFullName());
         customerDto.setEmail(customer.getEmail());
         customerDto.setPhoneNumber(customer.getPhoneNumber());
@@ -92,7 +110,7 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
         customerDto.setLongitude(customer.getCurrentLocation().getLongitude());
         customerDto.setRole(String.valueOf(customer.getRole()));
         customerDto.setAccountStatus(String.valueOf(customer.getAccountStatus()));
-        customerDto.setPreviousOrderIdList(previousOrderList);
+        customerDto.setPreviousOrderIdList(customer.getPreviousOrdersList());
         customerDto.setFavouriteFoodIdList(customer.getFavouriteFoodIdList());
         customerDto.setFavouriteVendorIdList(customer.getFavouriteVendorIdList());
         return customerDto;
@@ -101,9 +119,6 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
     @Override
     public Customer convertDtoToCustomer(CustomerDto customerDto) {
         Location currentLocation = new Location(customerDto.getLatitude(), customerDto.getLongitude());
-        List<MealOrder> previousMealOrders = new ArrayList<>();
-        customerDto.getPreviousOrderIdList().forEach(id ->
-                previousMealOrders.add(mealOrderRepository.findById(id).orElseThrow()));
 
         Customer customer = new Customer();
         customer.setUserName(customerDto.getUserName());
@@ -115,7 +130,6 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
         customer.setCurrentLocation(currentLocation);
         customer.setRole(Role.valueOf(customerDto.getRole()));
         customer.setAccountStatus(AccountStatus.valueOf(customerDto.getAccountStatus()));
-        customer.setPreviousOrdersList(previousMealOrders);
         customer.setFavouriteFoodIdList(customerDto.getFavouriteFoodIdList());
         customer.setFavouriteVendorIdList(customerDto.getFavouriteVendorIdList());
         return customer;
@@ -124,15 +138,14 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
 
     @Override
     public VendorDto convertVendorToDto(Vendor vendor) {
-        List<Meal> meals = mealRepository.findMealsByVendor_UserId(vendor.getUserId()).orElseThrow();
         List<Integer> mealIds = new ArrayList<>();
-        meals.forEach(meal -> mealIds.add(meal.getMealId()));
+        getMealByVendor(vendor.getUserId()).collectList()
+                .subscribe(mealIds::addAll);
 
-        List<MealOrder> orderList = mealOrderRepository.findOrderBySelectedVendor_UserId(vendor.getUserId()).orElseThrow();
-        List<Integer> orderIds = new ArrayList<>();
-        orderList.forEach(order -> orderIds.add(order.getOrderId()));
-
-        return getVendorDto(vendor, mealIds, orderIds);
+        List<Integer> orderIdList = new ArrayList<>();
+        getOrdersForVendor(vendor.getUserId()).collectList()
+                .subscribe(orderIdList::addAll);
+        return getVendorDto(vendor, mealIds, orderIdList);
     }
 
     private static VendorDto getVendorDto(Vendor vendor, List<Integer> mealIds, List<Integer> orderIds) {
@@ -186,8 +199,6 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
         vendor.setAccountStatus(AccountStatus.valueOf(vendorDto.getAccountStatus()));
         vendor.setRating(vendorDto.getRating());
         vendor.setCurrentLocation(location);
-        vendor.setMeals(mealRepository.findMealsByVendor_UserName(vendorDto.getUserName()).orElseThrow());
-        vendor.setOrderList(mealOrderRepository.findOrderByVendor_UserName(vendorDto.getUserName()).orElseThrow());
         return vendor;
     }
 }

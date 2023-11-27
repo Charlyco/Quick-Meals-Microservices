@@ -54,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse createCustomer(CustomerDto customerDto) {
         List<User> allUsers = userRepository.findAll();
-        if (allUsers.stream().noneMatch(user -> Objects.equals(user.getUserName(), customerDto.getUserName()))) {
+        if (allUsers.stream().noneMatch(user -> Objects.equals(user.getUsername(), customerDto.getUserName()))) {
             if (allUsers.stream().noneMatch(user -> Objects.equals(user.getEmail(), customerDto.getEmail()))) {
                 if (allUsers.stream().noneMatch(user -> Objects.equals(user.getPhoneNumber(), customerDto.getPhoneNumber()))) {
                     Customer createdCustomer = customerRepository.save(entityDtoConverter.convertDtoToCustomer(customerDto));
@@ -73,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse createVendor(VendorDto vendorDto) {
         List<User> allUsers = userRepository.findAll();
-        if (allUsers.stream().noneMatch(user -> Objects.equals(user.getUserName(), vendorDto.getUserName()))) {
+        if (allUsers.stream().noneMatch(user -> Objects.equals(user.getUsername(), vendorDto.getUserName()))) {
             if (allUsers.stream().noneMatch(user -> Objects.equals(user.getEmail(), vendorDto.getEmail()))) {
                 if (allUsers.stream().noneMatch(user -> Objects.equals(user.getPhoneNumber(), vendorDto.getPhoneNumber()))) {
                     Vendor createdVendor = vendorRepository.save(entityDtoConverter.convertDtoToVendor(vendorDto));
@@ -95,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
                 userName, password
             )
         );
-        User authenicatedUser = userRepository.findUserByUser_UserName(userName).orElseThrow();
+        User authenicatedUser = userRepository.findUserByUserName(userName).orElseThrow();
         String authToken = jwtService.generateToken(authenicatedUser);
         saveToken(authenicatedUser, authToken);
         AuthResponse authResponse = new AuthResponse();
@@ -128,8 +128,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Boolean resetPassword(String userName, String phone, String password) {
-        if (userRepository.findUserByUser_UserName(userName).isPresent()) {
-            var user = userRepository.findUserByUser_UserName(userName).orElseThrow();
+        if (userRepository.findUserByUserName(userName).isPresent()) {
+            var user = userRepository.findUserByUserName(userName).orElseThrow();
             if (Objects.equals(user.getPhoneNumber(), phone)) {
                 user.setPassword(passwordEncoder.encode(password));
                 userRepository.save(user);

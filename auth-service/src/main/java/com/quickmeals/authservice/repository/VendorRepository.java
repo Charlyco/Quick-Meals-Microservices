@@ -10,6 +10,6 @@ import java.util.List;
 
 @Repository
 public interface VendorRepository extends JpaRepository<Vendor, Integer> {
-    @Query("SELECT v FROM Vendor v WHERE v.business_name LIKE %:businessName%")
+    @Query("SELECT v FROM Vendor v WHERE v.businessName LIKE %:businessName%")
     List<Vendor> searchForVendorByBusinessName(@Param("businessName") String businessName);
 }

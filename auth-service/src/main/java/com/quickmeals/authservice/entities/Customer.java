@@ -17,8 +17,7 @@ import java.util.Objects;
 @DiscriminatorValue("C")
 public class Customer extends User{
 
-    @OneToMany(mappedBy = "customer")
-    private List<MealOrder> previousOrdersList;
+    private List<Integer> previousOrdersList;
     private List<Integer> favouriteFoodIdList;
     private List<Integer> favouriteVendorIdList;
 

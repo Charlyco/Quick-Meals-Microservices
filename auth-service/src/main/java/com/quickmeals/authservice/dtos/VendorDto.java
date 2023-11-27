@@ -1,6 +1,5 @@
 package com.quickmeals.authservice.dtos;
 
-import com.quickmeals.api.custom_types.Role;
 import lombok.Getter;
 import lombok.Setter;
 

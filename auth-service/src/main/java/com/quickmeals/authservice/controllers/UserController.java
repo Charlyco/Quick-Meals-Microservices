@@ -34,4 +34,9 @@ public interface UserController {
 
     @PutMapping("/{customerId}")
     ResponseEntity<Void> updateUserDetails(@PathVariable("customerId") Integer customerId, @RequestBody CustomerDto userUpdate);
+
+    @PutMapping("/signOut")
+    ResponseEntity<Void> signOut(@RequestParam("authToken") String authToken);
+    @PutMapping("/password")
+    ResponseEntity<Boolean> resetPassword(@PathVariable("userName") String userName, @RequestParam("phoneNumber") String phoneNumber, @RequestParam("password") String newPassword);
 }

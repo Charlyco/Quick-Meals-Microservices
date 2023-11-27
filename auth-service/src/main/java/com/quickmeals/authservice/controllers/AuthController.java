@@ -15,8 +15,5 @@ public interface AuthController {
     ResponseEntity<AuthResponse> createVendor (@RequestBody VendorDto vendorDto);
     @GetMapping
     ResponseEntity<AuthResponse> signIn(@RequestParam("userName") String userName, @RequestParam("password") String password);
-    @PutMapping("/signOut")
-    ResponseEntity<Void> signOut(@RequestParam("authToken") String authToken);
-    @PutMapping("/password")
-    ResponseEntity<Boolean> resetPassword(@PathVariable("userName") String userName, @RequestParam("phoneNumber") String phoneNumber, @RequestParam("password") String newPassword);
+
 }

@@ -23,9 +23,8 @@ public class SecurityConfig {
         this.authenticationProvider = authenticationProvider;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
     }
-
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))

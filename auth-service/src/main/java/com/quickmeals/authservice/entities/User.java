@@ -27,7 +27,6 @@ public class User implements UserDetails {
     @Getter
     private Integer userId;
 
-    @Getter
     @Column(unique = true)
     private String userName;
 

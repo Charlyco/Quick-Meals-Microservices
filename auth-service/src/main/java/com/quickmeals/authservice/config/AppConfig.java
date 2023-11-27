@@ -26,7 +26,7 @@ public class AppConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
-            Optional<User> user = userRepository.findUserByUser_UserName(username);
+            Optional<User> user = userRepository.findUserByUserName(username);
             if (user.isEmpty()) {
                 throw new UsernameNotFoundException("Customer not found");
             }
