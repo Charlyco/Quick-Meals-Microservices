@@ -1,50 +1,59 @@
 package com.quickmeals.authservice.serviceImpl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quickmeals.authservice.customtypes.*;
 import com.quickmeals.authservice.dtos.*;
 import com.quickmeals.authservice.entities.*;
 import com.quickmeals.authservice.repository.CustomerRepository;
 import com.quickmeals.authservice.repository.VendorRepository;
+import com.quickmeals.authservice.services.EntityDtoConverter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-
-import java.time.LocalDateTime;
+import org.springframework.web.client.RestClient;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
 
 @Service
 @RequiredArgsConstructor
-public class EntityDtoConverter implements com.quickmeals.authservice.services.EntityDtoConverter {
+@Slf4j
+public class EntityDtoConverterImpl implements EntityDtoConverter {
     private final CustomerRepository customerRepository;
     private final LoadBalancerClient loadBalancerClient;
-    private final WebClient.Builder webClientBuilder;
     private final VendorRepository vendorRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public Flux<Integer> getOrdersForVendor(Integer vendorId) {
+    public <T> List<T> deserializeJsonArray(String jsonArray, Class<T> clazz) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            return objectMapper.readValue(jsonArray, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
+        } catch (JsonProcessingException e) {
+            log.info(e.getMessage());
+            return null; // Handle exception or return an empty list based on your needs
+        }
+    }
+    public List<Integer> getOrderIdsForVendor(Integer vendorId) {
         String orderServiceUrl = loadBalancerClient.choose("order-service").getUri().toString();
-        return  webClientBuilder.build()
-                .get()
+        RestClient restClient = RestClient.create();
+        String body = restClient.get()
                 .uri(orderServiceUrl + "/api/v1/mealOrder/vendor?vendorId={vendorId}", vendorId)
                 .retrieve()
-                .bodyToFlux(MealOrderDto.class)
-                .map(MealOrderDto::getOrderId);
+                .body(String.class);
+        return deserializeJsonArray(body, MealOrderDto.class).stream().map(MealOrderDto::getOrderId).toList();
     }
-
-    public Flux<Integer> getMealByVendor(Integer vendorId) {
-        String orderServiceUrl = loadBalancerClient.choose("product-service").getUri().toString();
-        return  webClientBuilder.build()
-                .get()
-                .uri(orderServiceUrl + "/api/v1/meal/vendorId?vendorId={vendorId}", vendorId)
+    public List<Integer> getMealIdsByVendor(Integer vendorId) {
+        String mealServiceUrl = loadBalancerClient.choose("product-service").getUri().toString();
+        RestClient restClient = RestClient.create();
+        String body = restClient.get()
+                .uri(mealServiceUrl + "/api/v1/meal/vendorId?vendorId={vendorId}", vendorId)
                 .retrieve()
-                .bodyToFlux(MealDto.class)
-                .map(MealDto::getMealId);
+                .body(String.class);
+        return deserializeJsonArray(body, MealDto.class).stream().map(MealDto::getMealId).toList();
     }
 
     @Override
@@ -76,6 +85,22 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
         userDto.setLongitude(vendor.getCurrentLocation().getLongitude());
         userDto.setRole(String.valueOf(vendor.getRole()));
         userDto.setAccountStatus(String.valueOf(vendor.getAccountStatus()));
+        return userDto;
+    }
+
+    @Override
+    public UserDto convertDispatcerToUserDto(Dispatcher dispatcher) {
+        UserDto userDto = new UserDto();
+        userDto.setUserId(dispatcher.getUserId());
+        userDto.setUserName(dispatcher.getUsername());
+        userDto.setFullName(dispatcher.getFullName());
+        userDto.setEmail(dispatcher.getEmail());
+        userDto.setPhoneNumber(dispatcher.getPhoneNumber());
+        userDto.setAddress(dispatcher.getAddress());
+        userDto.setLatitude(dispatcher.getCurrentLocation().getLatitude());
+        userDto.setLongitude(dispatcher.getCurrentLocation().getLongitude());
+        userDto.setRole(String.valueOf(dispatcher.getRole()));
+        userDto.setAccountStatus(String.valueOf(dispatcher.getAccountStatus()));
         return userDto;
     }
 
@@ -138,13 +163,9 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
 
     @Override
     public VendorDto convertVendorToDto(Vendor vendor) {
-        List<Integer> mealIds = new ArrayList<>();
-        getMealByVendor(vendor.getUserId()).collectList()
-                .subscribe(mealIds::addAll);
+        List<Integer> mealIds = getMealIdsByVendor(vendor.getUserId());
 
-        List<Integer> orderIdList = new ArrayList<>();
-        getOrdersForVendor(vendor.getUserId()).collectList()
-                .subscribe(orderIdList::addAll);
+        List<Integer> orderIdList = getOrderIdsForVendor(vendor.getUserId());
         return getVendorDto(vendor, mealIds, orderIdList);
     }
 
@@ -188,7 +209,7 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
             vendor.setUserId(vendorDto.getUserId());
         }
         vendor.setUserName(vendorDto.getUserName());
-        vendor.setPassword(passwordEncoder.encode(vendor.getPassword()));
+        vendor.setPassword(passwordEncoder.encode(vendorDto.getPassword()));
         vendor.setBusinessName(vendorDto.getBusinessName());
         vendor.setFullName(vendorDto.getManagerFullName());
         vendor.setAddress(vendorDto.getAddress());
@@ -200,5 +221,50 @@ public class EntityDtoConverter implements com.quickmeals.authservice.services.E
         vendor.setRating(vendorDto.getRating());
         vendor.setCurrentLocation(location);
         return vendor;
+    }
+
+    @Override
+    public Dispatcher convertDtoToDispatcher(DispatcherDto dispatcherDto) {
+        Location location = new Location();
+        location.setLatitude(dispatcherDto.getLatitude());
+        location.setLongitude(dispatcherDto.getLongitude());
+        BankDetail bankDetail = new BankDetail();
+        bankDetail.setBankName(dispatcherDto.getBankName());
+        bankDetail.setAccountName(dispatcherDto.getAccountName());
+        bankDetail.setAccountNumber(dispatcherDto.getAccountNumber());
+
+        Dispatcher dispatcher = new Dispatcher();
+
+        dispatcher.setUserName(dispatcherDto.getUserName());
+        dispatcher.setPassword(passwordEncoder.encode(dispatcherDto.getPassword()));
+        dispatcher.setAddress(dispatcherDto.getAddress());
+        dispatcher.setEmail(dispatcherDto.getEmail());
+        dispatcher.setPhoneNumber(dispatcherDto.getPhoneNumber());
+        dispatcher.setRole(Role.valueOf(dispatcherDto.getRole()));
+        dispatcher.setAccountStatus(AccountStatus.valueOf(dispatcherDto.getAccountStatus()));
+        dispatcher.setRating(dispatcherDto.getRating());
+        dispatcher.setDailyDeliveries(dispatcher.getDailyDeliveries());
+        dispatcher.setBankDetail(bankDetail);
+        dispatcher.setCurrentLocation(location);
+        return dispatcher;
+    }
+
+    @Override
+    public DispatcherDto convertDispatcherToDto(Dispatcher dispatcher) {
+        DispatcherDto dispatcherDto = new DispatcherDto();
+        dispatcherDto.setUserId(dispatcher.getUserId());
+        dispatcherDto.setUserName(dispatcher.getUsername());
+        dispatcherDto.setDispatcherTag(dispatcher.getDispatcherTag());
+        dispatcherDto.setEmail(dispatcherDto.getEmail());
+        dispatcherDto.setPhoneNumber(dispatcher.getPhoneNumber());
+        dispatcherDto.setLatitude(dispatcher.getCurrentLocation().getLatitude());
+        dispatcherDto.setLongitude(dispatcher.getCurrentLocation().getLongitude());
+        dispatcherDto.setAddress(dispatcher.getAddress());
+        dispatcherDto.setRole(String.valueOf(dispatcher.getRole()));
+        dispatcherDto.setRating(dispatcher.getRating());
+        dispatcherDto.setAccountStatus(String.valueOf(dispatcher.getAccountStatus()));
+        dispatcherDto.setDailyDeliveries(dispatcher.getDailyDeliveries());
+        dispatcherDto.setWalletBalance(dispatcher.getWalletBalance());
+        return null;
     }
 }

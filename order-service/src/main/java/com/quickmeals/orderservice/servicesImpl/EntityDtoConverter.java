@@ -13,7 +13,7 @@ public class EntityDtoConverter implements com.quickmeals.orderservice.services.
 
         MealOrderDto mealOrderDto = new MealOrderDto();
         mealOrderDto.setOrderId(mealOrder.getOrderId());
-        mealOrderDto.setMealIdList(mealOrder.getRequestedMealIds());
+        mealOrderDto.setRequestedMealIds(mealOrder.getRequestedMealIds());
         mealOrderDto.setTotalPrice(mealOrder.getTotalPrice());
         mealOrderDto.setOrderStatus(String.valueOf(mealOrder.getOrderStatus()));
         mealOrderDto.setOrderTime(String.valueOf(mealOrder.getOrderTime()));
@@ -28,7 +28,7 @@ public class EntityDtoConverter implements com.quickmeals.orderservice.services.
 
         MealOrder mealOrder = new MealOrder();
         mealOrder.setOrderId(mealOrderDto.getOrderId());
-        mealOrder.setRequestedMealIds(mealOrderDto.getMealIdList());
+        mealOrder.setRequestedMealIds(mealOrderDto.getRequestedMealIds());
         mealOrder.setTotalPrice(mealOrderDto.getTotalPrice());
         mealOrder.setOrderStatus(MealOrderStatus.valueOf(mealOrderDto.getOrderStatus()));
         mealOrder.setRequestingCustomerId(mealOrderDto.getCustomerId());

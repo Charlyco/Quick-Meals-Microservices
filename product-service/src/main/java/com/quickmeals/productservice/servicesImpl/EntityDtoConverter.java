@@ -1,5 +1,6 @@
 package com.quickmeals.productservice.servicesImpl;
 
+import com.quickmeals.productservice.customtypes.Category;
 import com.quickmeals.productservice.dtos.*;
 import com.quickmeals.productservice.entities.*;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,7 @@ public class EntityDtoConverter implements com.quickmeals.productservice.service
         MealDto mealDto = new MealDto();
         mealDto.setMealId(meal.getMealId());
         mealDto.setMealName(meal.getMealName());
-        mealDto.setCategory(meal.getCategory());
+        mealDto.setCategory(String.valueOf(meal.getCategory()));
         mealDto.setImageUrl(meal.getImageUrl());
         mealDto.setDescription(meal.getDescription());
         mealDto.setUnitPrice(meal.getUnitPrice());
@@ -30,13 +31,13 @@ public class EntityDtoConverter implements com.quickmeals.productservice.service
             meal.setMealId(mealDto.getMealId());
         }
         meal.setMealName(mealDto.getMealName());
-        meal.setCategory(mealDto.getCategory());
+        meal.setCategory(Category.valueOf(mealDto.getCategory()));
         meal.setImageUrl(mealDto.getImageUrl());
         meal.setDescription(mealDto.getDescription());
         meal.setUnitPrice(mealDto.getUnitPrice());
         meal.setAvailableQuantity(mealDto.getAvailableQuantity());
         meal.setInStock(mealDto.getInStock());
-        meal.setVendorId(meal.getVendorId());
+        meal.setVendorId(mealDto.getVendorId());
         return meal;
     }
 }

@@ -8,13 +8,14 @@ import java.util.List;
 
 @Service
 public interface MealOrderService {
-    Boolean createNewMealOrder(MealOrderDto mealOrderDto);
+    Integer createNewMealOrder(MealOrderDto mealOrderDto);
     List<MealOrderDto> getAllMealOrders();
     List<MealOrderDto> filterOrdersByCustomer(Integer userId);
     List<MealOrderDto> filterOrdersByVendor(Integer userId);
-    Boolean updateOrderStatus(Integer orderId, MealOrderStatus orderStatus);
+    MealOrderStatus updateOrderStatus(Integer orderId, MealOrderStatus orderStatus);
     MealOrderStatus queryMealOrderStatus(Integer orderId);
     Boolean cancelOrder(Integer orderId);
     Boolean deleteOrder(Integer orderId);
+    MealOrderDto getOrderDetailsByIdAndCustomer(Integer orderId, Integer customerId);
 
 }

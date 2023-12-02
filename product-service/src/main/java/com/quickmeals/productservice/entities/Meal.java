@@ -1,5 +1,6 @@
 package com.quickmeals.productservice.entities;
 
+import com.quickmeals.productservice.customtypes.Category;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,7 +19,7 @@ public class Meal {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer mealId;
     private String mealName;
-    private String category;
+    private Category category;
     private String imageUrl;
     private String description;
     private Double unitPrice;
@@ -27,7 +28,7 @@ public class Meal {
     private Integer vendorId;
 
     public Meal(String mealName,
-                String category,
+                Category category,
                 String imageUrl,
                 Double unitPrice,
                 Integer availableQuantity,

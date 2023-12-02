@@ -7,25 +7,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "meal order")
 @Entity
 public class MealOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer orderId;
-    private Set<Integer> requestedMealIds = new HashSet<>();
-    private Double totalPrice;
-    private MealOrderStatus orderStatus;
     private LocalDateTime orderTime;
     private Integer requestingCustomerId;
     private Integer selectedVendorId;
+    private Set<Integer> requestedMealIds;
+    private Double totalPrice;
+    private MealOrderStatus orderStatus;
 
     public MealOrder(Set<Integer> requestedMealIds,
                      Double totalPrice,

@@ -2,50 +2,33 @@ package com.quickmeals.authservice.serviceImpl;
 
 import com.quickmeals.authservice.customtypes.AuthResponse;
 import com.quickmeals.authservice.dtos.CustomerDto;
+import com.quickmeals.authservice.dtos.DispatcherDto;
 import com.quickmeals.authservice.dtos.VendorDto;
-import com.quickmeals.authservice.entities.AuthToken;
-import com.quickmeals.authservice.entities.Customer;
-import com.quickmeals.authservice.entities.User;
-import com.quickmeals.authservice.entities.Vendor;
-import com.quickmeals.authservice.repository.CustomerRepository;
-import com.quickmeals.authservice.repository.TokenRepository;
-import com.quickmeals.authservice.repository.UserRepository;
-import com.quickmeals.authservice.repository.VendorRepository;
+import com.quickmeals.authservice.entities.*;
+import com.quickmeals.authservice.repository.*;
 import com.quickmeals.authservice.security.JwtService;
 import com.quickmeals.authservice.services.AuthService;
 import com.quickmeals.authservice.services.EntityDtoConverter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
-
+@Service
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final CustomerRepository customerRepository;
     private final VendorRepository vendorRepository;
+    private final DispatcherRepository dispatcherRepository;
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final EntityDtoConverter entityDtoConverter;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
-
-    public AuthServiceImpl(
-            CustomerRepository customerRepository,
-            VendorRepository vendorRepository,
-            JwtService jwtService,
-            TokenRepository tokenRepository,
-            UserRepository userRepository, EntityDtoConverter entityDtoConverter, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
-        this.customerRepository = customerRepository;
-        this.vendorRepository = vendorRepository;
-        this.jwtService = jwtService;
-        this.tokenRepository = tokenRepository;
-        this.userRepository = userRepository;
-        this.entityDtoConverter = entityDtoConverter;
-        this.authenticationManager = authenticationManager;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     /**
      * @param customerDto
@@ -90,6 +73,25 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public AuthResponse createDispatcher(DispatcherDto dispatcherDto) {
+        List<User> allUsers = userRepository.findAll();
+        if (allUsers.stream().noneMatch(user -> Objects.equals(user.getUsername(), dispatcherDto.getUserName()))) {
+            if (allUsers.stream().noneMatch(user -> Objects.equals(user.getEmail(), dispatcherDto.getEmail()))) {
+                if (allUsers.stream().noneMatch(user -> Objects.equals(user.getPhoneNumber(), dispatcherDto.getPhoneNumber()))) {
+                     Dispatcher newDispatcher = dispatcherRepository.save(entityDtoConverter.convertDtoToDispatcher(dispatcherDto));
+                    String authToken = jwtService.generateToken(newDispatcher);
+                    saveToken(newDispatcher, authToken);
+                    AuthResponse authResponse = new AuthResponse();
+                    authResponse.setJwtToken(authToken);
+                    authResponse.setUserDto(entityDtoConverter.convertDispatcerToUserDto(newDispatcher));
+                    return authResponse;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
     public AuthResponse signIn(String userName, String password) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 userName, password
@@ -126,6 +128,8 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.save(tokenToRevoke);
     }
 
+    /*
+    * To be modified to include OTP verification for phone number*/
     @Override
     public Boolean resetPassword(String userName, String phone, String password) {
         if (userRepository.findUserByUserName(userName).isPresent()) {

@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(authorize ->
                         authorize
-                                .requestMatchers("/api/v1/auth")
+                                .requestMatchers("/api/v1/auth-service/auth/**")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated())

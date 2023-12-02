@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/meal")
+@RequestMapping("/api/v1/product-service/meal")
 public interface MealController {
     @GetMapping("/all")
     ResponseEntity<List<MealDto>> getAllMeals();
+
+    @GetMapping("/category")
+    ResponseEntity<List<MealDto>> getMealsByCategory(@RequestParam("category") String category);
 
     @GetMapping("/meal")
     ResponseEntity<List<MealDto>> getMealsByName(@RequestParam("mealName") String name);

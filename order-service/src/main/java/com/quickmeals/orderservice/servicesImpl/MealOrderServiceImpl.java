@@ -5,23 +5,23 @@ import com.quickmeals.orderservice.dtos.MealOrderDto;
 import com.quickmeals.orderservice.entities.MealOrder;
 import com.quickmeals.orderservice.repository.MealOrderRepository;
 import com.quickmeals.orderservice.services.MealOrderService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+@Service
+@RequiredArgsConstructor
 public class MealOrderServiceImpl implements MealOrderService {
     private final MealOrderRepository mealOrderRepository;
     private final EntityDtoConverter entityDtoConverter;
 
-    public MealOrderServiceImpl(MealOrderRepository mealOrderRepository, EntityDtoConverter entityDtoConverter) {
-        this.mealOrderRepository = mealOrderRepository;
-        this.entityDtoConverter = entityDtoConverter;
-    }
-
     @Override
-    public Boolean createNewMealOrder(MealOrderDto mealOrderDto) {
+    public Integer createNewMealOrder(MealOrderDto mealOrderDto) {
         MealOrder mealOrder = mealOrderRepository.save(entityDtoConverter.convertDtoToMealOrder(mealOrderDto));
-        return mealOrder.getOrderId() != null;
+        return mealOrder.getOrderId();
     }
 
     @Override
@@ -49,12 +49,12 @@ public class MealOrderServiceImpl implements MealOrderService {
     }
 
     @Override
-    public Boolean updateOrderStatus(Integer orderId, MealOrderStatus orderStatus) {
+    public MealOrderStatus updateOrderStatus(Integer orderId, MealOrderStatus orderStatus) {
         if (mealOrderRepository.findById(orderId).isPresent()) {
             MealOrder mealOrder = mealOrderRepository.findById(orderId).orElseThrow();
             mealOrder.setOrderStatus(orderStatus);
             mealOrderRepository.save(mealOrder);
-            return true;
+            return mealOrder.getOrderStatus();
         }else return null;
     }
 
@@ -82,5 +82,14 @@ public class MealOrderServiceImpl implements MealOrderService {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public MealOrderDto getOrderDetailsByIdAndCustomer(Integer orderId, Integer customerId) {
+        MealOrder order = mealOrderRepository.findById(orderId).orElseThrow();
+        if (Objects.equals(order.getRequestingCustomerId(), customerId)) {
+            return entityDtoConverter.convertMealOderToDto(order);
+        }
+        return null;
     }
 }

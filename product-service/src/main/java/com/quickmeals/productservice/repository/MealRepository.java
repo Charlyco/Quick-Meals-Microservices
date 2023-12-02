@@ -1,5 +1,6 @@
 package com.quickmeals.productservice.repository;
 
+import com.quickmeals.productservice.customtypes.Category;
 import com.quickmeals.productservice.entities.Meal;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,4 +16,6 @@ public interface MealRepository extends JpaRepository<Meal, Integer> {
 
     @Query("SELECT m FROM Meal m WHERE m.mealName LIKE %:mealName%")
     Optional<List<Meal>> findMealsByMealName(@Param("mealName") String mealName);
+
+    Optional<List<Meal>> findMealsByCategory(Category category);
 }

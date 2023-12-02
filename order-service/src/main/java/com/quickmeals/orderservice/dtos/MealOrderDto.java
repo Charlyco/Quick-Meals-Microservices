@@ -10,7 +10,7 @@ import java.util.Set;
 @Setter
 public class MealOrderDto {
     private Integer orderId;
-    private Set<Integer> mealIdList = new HashSet<>();
+    private Set<Integer> requestedMealIds = new HashSet<>();
     private Double totalPrice;
     private String orderStatus;
     private String orderTime;

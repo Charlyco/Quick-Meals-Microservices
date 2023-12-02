@@ -1,5 +1,6 @@
 package com.quickmeals.productservice.servicesImpl;
 
+import com.quickmeals.productservice.customtypes.Category;
 import com.quickmeals.productservice.dtos.MealDto;
 import com.quickmeals.productservice.entities.Meal;
 import com.quickmeals.productservice.repository.MealRepository;
@@ -50,6 +51,14 @@ public class MealServiceImpl implements MealService {
     }
 
     @Override
+    public List<MealDto> getMealsByCategory(String category) {
+        List<MealDto> mealDtoList = new ArrayList<>();
+        mealRepository.findMealsByCategory(Category.valueOf(category)).orElseThrow().forEach(meal ->
+                mealDtoList.add(entityDtoConverter.convertMealToDto(meal)));
+        return mealDtoList;
+    }
+
+    @Override
     public List<MealDto> getMealsByVendor(Integer vendorId) {
         List<MealDto> mealDtoList = new ArrayList<>();
         mealRepository.findMealsByVendorId(vendorId).orElseThrow()
@@ -88,6 +97,6 @@ public class MealServiceImpl implements MealService {
             meal.setAvailableQuantity(quantityToUpdate);
             return meal.getAvailableQuantity();
         }
-        return 0;
+        return null;
     }
 }

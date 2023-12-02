@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.function.Function;
 @Component
 public class JwtService {
-    private static final String SECRET_KEY = "gH5XCVEiEPCfkAJw7CFD6GvobuYHaagCmmoUf3AcOSVwTtCTJbEKxQiGx_7ZIf61a07gzEtIr51R_mhadXBzUeLV6xCj14eGgojPRv3nQ7xHMb822XRwYmsOtGwcWM-FKKXYq93_uVgT3HtDC0YOvV5ujv4GNZkgIb-QZe9fKnZ_xQua8vd3pt3CoQe4hdcYVPn2Qzlr86Lr9PdqS1hCY5KbYM2N7HXiVW2H_EO6KLcNBftmxmB2Klrp65TMucXo_6Eg8ApN8YJHJJsuh63Sw5tssc671VLSmf26aOFZE1RUMY9Ijv6r4V4DUJ-dRcq3wfegawRkRYGP7pyyL4tVKA";
+    private static final String SECRET_KEY = "Y29tcG91bmRtaXhzYXZlZGhhdHNpbGVudGluY3JlYXNlZXhjaGFuZ2VjdXR0aW5ncm8=";
     public String extractUserName(String token) {
 
         return extractSingleClaim(token, Claims::getSubject);

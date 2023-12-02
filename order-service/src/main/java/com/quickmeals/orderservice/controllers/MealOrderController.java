@@ -8,7 +8,7 @@ import com.quickmeals.orderservice.customtypes.MealOrderStatus;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/mealOrder")
+@RequestMapping("api/v1/order-service/mealOrder")
 public interface MealOrderController {
 
     @PostMapping()

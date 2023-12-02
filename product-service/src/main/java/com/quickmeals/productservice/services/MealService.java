@@ -1,5 +1,6 @@
 package com.quickmeals.productservice.services;
 
+import com.quickmeals.productservice.customtypes.Category;
 import com.quickmeals.productservice.dtos.MealDto;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +12,7 @@ public interface MealService {
     Boolean deleteMeal(Integer mealId);
     Boolean updateMeal(Integer mealId, MealDto mealDto);
     List<MealDto> loadAllMeals();
+    List<MealDto> getMealsByCategory(String category);
     List<MealDto> getMealsByVendor(Integer vendorId);
     List<MealDto> getMealsByName(String mealName);
     MealDto getMealById(Integer mealId);
